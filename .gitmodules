@@ -1,0 +1,3 @@
+[submodule "nccl"]
+	path = nccl
+	url = git@github.com:YconquestY/nccl.git
