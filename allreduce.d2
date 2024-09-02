@@ -1,0 +1,113 @@
+plugins: {
+    near: top-center
+    ncclPlugin: {
+        allreducePlugin\.cpp: {
+            grid-rows: 1
+            AllreducePlugin\:\:enqueue -> selectImplementation
+        }
+    }
+}
+plugins.ncclPlugin.allreducePlugin\.cpp.AllreducePlugin\:\:enqueue -> ncclAllReduce: either {
+    style: {
+        stroke: red # How is NCCL still fused with LayerNorm?
+    }
+}
+plugins.ncclPlugin.allreducePlugin\.cpp.AllreducePlugin\:\:enqueue -> kernels.customAllReduceKernels\.cu.customAllReduce: or
+
+plugins.ncclPlugin.allreducePlugin\.cpp.selectImplementation -> common.customAllReduceUtils\.h.getMaxRequiredWorkspaceSize
+plugins.ncclPlugin.allreducePlugin\.cpp.selectImplementation -> kernels.customAllReduceKernels\.cu.configurationSupported
+
+\.\./\.\./tensorrt_llm: {
+    plugin: {
+        plugin\.py: {
+            PluginConfig: {
+                shape: class
+                set_nccl_plugin(dtype): self
+            }
+            PluginConfig -> init_all_reduce_helper: set_nccl_plugin
+            
+            init_all_reduce_helper -> CustomAllReduceHelper: {
+                style: {
+                    stroke-dash: 6
+                }
+            }
+            CustomAllReduceHelper: {
+                shape: class
+
+                max_workspace_size_auto(tp_size): <size>
+                allocate_workspace(mapping, size): (buffers, …)
+            }
+        }
+    }
+}
+\.\./\.\./tensorrt_llm.plugin.plugin\.py.CustomAllReduceHelper -> common.customAllReduceUtils\.h.getMaxRequiredWorkspaceSize: max_workspace_size_auto {
+    style: {
+        stroke: black
+        stroke-dash: 6
+    }
+}
+common: {
+    customAllReduceUtils\.h: {
+        getMaxRequiredWorkspaceSize
+    }
+}
+kernels: {
+    customAllReduceKernels\.cu: {
+        customAllReduce -> AllReduceDispatchType
+        customAllReduce -> configurationSupported: {
+            style: {
+                stroke: gray
+            }
+        }
+
+        AllReduceDispatchType -> AllReduceDispatchRanksPerNode
+
+        AllReduceDispatchRanksPerNode -> AllReduceDispatchPushMode
+
+        AllReduceDispatchPushMode -> AllReduceDispatchMemcpy
+
+        AllReduceDispatchMemcpy -> AllReduceDispatch: standalone
+        AllReduceDispatchMemcpy -> AllReduceNormDispatch: fused
+
+        AllReduceDispatch -> oneShotAllReduceKernel: either
+
+        oneShotAllReduceKernel.style.stroke: orange
+        oneShotAllReduceKernel.style.fill: lightgoldenrodyellow
+
+        AllReduceDispatch -> kernelLaunchConfig
+        AllReduceDispatch -> twoShotAllReduceKernel: or
+        twoShotAllReduceKernel.style.stroke: orange
+        twoShotAllReduceKernel.style.fill: lightgoldenrodyellow
+
+        AllReduceNormDispatch -> AllReduceNormKernelLaunch
+
+        oneShotAllReduceKernel -> block_barrier: either
+        block_barrier.style.stroke: orange
+        block_barrier.style.fill: lightgoldenrodyellow
+
+        oneShotAllReduceKernel -> multi_gpu_barrier: or
+        multi_gpu_barrier.style.stroke: orange
+        multi_gpu_barrier.style.fill: lightgoldenrodyellow
+
+        twoShotAllReduceKernel -> multi_gpu_barrier: or
+        twoShotAllReduceKernel -> block_barrier: either
+
+        AllReduceNormKernelLaunch -> kernelLaunchConfig: or
+        AllReduceNormKernelLaunch -> twoShotAllReduceKernel: or
+        AllReduceNormKernelLaunch -> rms_norm_kernel_launcher: or
+        AllReduceNormKernelLaunch -> one_shot_all_reduce_norm_kernel_launcher: either
+
+        rms_norm_kernel_launcher -> rms_norm_kernel
+        rms_norm_kernel.style.stroke: orange
+        rms_norm_kernel.style.fill: lightgoldenrodyellow
+
+        one_shot_all_reduce_norm_kernel_launcher -> one_shot_all_reduce_norm_kernel
+        one_shot_all_reduce_norm_kernel.style.stroke: orange
+        one_shot_all_reduce_norm_kernel.style.fill: lightgoldenrodyellow
+
+        one_shot_all_reduce_norm_kernel -> block_barrier
+        one_shot_all_reduce_norm_kernel -> rms_norm
+        rms_norm.style.stroke: orange
+        rms_norm.style.fill: lightgoldenrodyellow
+    }
+}

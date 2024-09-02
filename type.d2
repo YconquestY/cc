@@ -1,0 +1,91 @@
+placeholder: {
+    grid-columns: 1
+
+    PackedOn16BytesWrapper: {
+        PackedOn16Bytes\<T\>: {
+            shape: class
+        }
+        PackedOn16Bytes\<T\> -> PackedFloat: T: float
+        PackedOn16Bytes\<T\> -> PackedFloat\': T: float
+        PackedOn16Bytes\<T\> -> PackedHalf: T: half
+        PackedOn16Bytes\<T\> -> PackedHalf\': T: half
+
+        PackedFloat: {
+            shape: class
+            int4: packed
+        }
+        PackedFloat\': {
+            shape: class
+            float: unpacked\[4\]
+        }
+        PackedHalf: {
+            shape: class
+            int4: packed
+        }
+        PackedHalf\': {
+            shape: class
+            half2: unpacked\[4\]
+        }
+    }
+    PackedOn16BytesWrapper.style.opacity: 0
+
+    ParamsWrapper: {
+        AllReduceParams {
+            shape: class
+
+            size_t: elts_total, elts_per_rank, elts_per_block
+            size_t\': local_rank
+
+            void\*: peer_comm_buffer_ptrs\[MAX_RANKS_PER_NODE\]
+            void\*\': local_output_buffer_ptr
+            const void\*: local_input_buffer_ptr
+
+            AllReduceFusionParams: fusion_params
+
+            deserialize(int64_t\* buffer, size_t tpSize, size_t tpRank): AllReduceParams
+        }
+        AllReduceParams -> AllReduceFusionParams: fusion_params {
+            style: {
+                stroke: black
+                stroke-dash: 6
+            }
+        }
+        AllReduceFusionParams: {
+            shape: class
+            # `bias_buffer` is GEMM bias.
+            const void\*: bias_buffer, residual_buffer
+            # RMSNorm
+            int: hidden_size
+            const void\*\': weight_buffer
+            float: eps
+
+            void\*: intermediate_buffer
+        }
+    }
+    ParamsWrapper.style.opacity: 0
+
+    EnumWrapper: {
+        AllReduceStrategyType: {
+            shape: sql_table
+
+            NCCL: 0
+            ONESHOT: 1
+            TWOSHOT: 2
+            AUTO: 3
+        }
+        AllReduceStrategyConfig {
+            shape: sql_table
+
+            USE_MEMCPY: 1
+            RESIDUAL_RMS_NORM: 2
+        }
+        AllReduceFusionOp: {
+            shape: sql_table
+
+            NONE: 0
+            RESIDUAL_RMS_NORM: 1
+        }
+    }
+    EnumWrapper.style.opacity: 0
+}
+placeholder.style.opacity: 0

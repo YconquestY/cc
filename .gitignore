@@ -1,0 +1,6 @@
+# D2
+*.svg
+*.png
+font/
+# Nsight profiling
+profile/
