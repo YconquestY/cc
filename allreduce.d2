@@ -101,13 +101,46 @@ kernels: {
         rms_norm_kernel.style.stroke: orange
         rms_norm_kernel.style.fill: lightgoldenrodyellow
 
-        one_shot_all_reduce_norm_kernel_launcher -> one_shot_all_reduce_norm_kernel
+        one_shot_all_reduce_norm_kernel_launcher -> one_shot_all_reduce_norm_kernel: or
         one_shot_all_reduce_norm_kernel.style.stroke: orange
         one_shot_all_reduce_norm_kernel.style.fill: lightgoldenrodyellow
+        one_shot_all_reduce_norm_kernel_launcher -> is_lamport_supported: either {
+            style: {
+                stroke: blueviolet
+            }
+        }
+        one_shot_all_reduce_norm_kernel_launcher -> lamport_style_one_shot_all_reduce_norm_kernel_launcher: either {
+            style: {
+                stroke: blueviolet
+            }
+        }
+        is_lamport_supported.style.stroke: blueviolet
+        lamport_style_one_shot_all_reduce_norm_kernel_launcher.style.stroke: blueviolet
 
         one_shot_all_reduce_norm_kernel -> block_barrier
         one_shot_all_reduce_norm_kernel -> rms_norm
         rms_norm.style.stroke: orange
         rms_norm.style.fill: lightgoldenrodyellow
+
+        lamport_style_one_shot_all_reduce_norm_kernel_launcher -> heuristic_min_warp_number: {
+            style: {
+                stroke: blueviolet
+            }
+        }
+        lamport_style_one_shot_all_reduce_norm_kernel_launcher -> lamport_style_one_shot_all_reduce_norm_kernel: {
+            style: {
+                stroke: blueviolet
+            }
+        }
+        heuristic_min_warp_number.style.stroke: blueviolet
+        
+        lamport_style_one_shot_all_reduce_norm_kernel.style.stroke: blueviolet
+        lamport_style_one_shot_all_reduce_norm_kernel.style.fill: violet
+        # This edge is meaningless. It is placed here for the sake of formatting.
+        heuristic_min_warp_number -> is_lamport_supported: {
+            style: {
+                opacity: 0
+            }
+        }
     }
 }
